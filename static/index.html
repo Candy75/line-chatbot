@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title> 益起酵起來😀 </title>
+  <style>
+    /* 取消固定 max-width，讓容器更寬或全寬 */
+    body {
+      margin: 2rem;
+      font-family: sans-serif;
+      background: #f5f5dc;
+    }
+    #container {
+      margin: 0 auto;
+      /* 可以改成你想要的寬度，例如 80% 或具體 px */
+      width: 80%;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+    }
+    #chat {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      height: 500px;
+      overflow-y: auto;
+      background: #fff;
+    }
+
+    /* 使用者和機器人訊息 */
+    .msg { margin-bottom: 1rem; line-height: 1.5; }
+    .user { color: #0066cc; font-size: 1.2rem; }
+    .bot  { color: #483d8b; font-size: 1.2rem; }
+
+    /* 思考動畫 */
+    .thinking {
+      display: flex;
+      align-items: center;
+      color: #999;
+      font-style: italic;
+    }
+    .thinking .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #ccc;
+      border-top-color: #888;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 底部輸入區 */
+    #input-area {
+      display: flex;
+      margin-top: 1rem;
+    }
+    #msg {
+      flex: 1;
+      resize: vertical;
+      min-height: 5rem;
+      font-size: 1.1rem;
+      padding: 0.5rem;
+      box-sizing: border-box;
+    }
+    #send {
+      margin-left: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>一起酵起來😀 </h1>
+    <div id="chat"></div>
+    <div id="input-area">
+      <!-- 改用多行 textarea -->
+      <textarea id="msg" placeholder="🥸 嗨～我是酵小編，讓你從腸順到人生都順！"></textarea>
+      <button id="send">送出</button>
+    </div>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const msgInput = document.getElementById('msg');
+    const sendBtn = document.getElementById('send');
+
+    // 幫助函式：自動捲到底部
+    function scrollToBottom() {
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // 處理 markdown 粗體與分段
+    function formatBotText(text) {
+      // 換行兩次分段
+      const paragraphs = text.split(/\n\n+/);
+      return paragraphs.map(p => {
+        // 粗體 **text**
+        const html = p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        return `<p>${html}</p>`;
+      }).join('');
+    }
+
+    sendBtn.addEventListener('click', async () => {
+      const userText = msgInput.value.trim();
+      if (!userText) return;
+
+      // 顯示使用者訊息
+      const uDiv = document.createElement('div');
+      uDiv.className = 'msg user';
+      uDiv.textContent = '你就是你： ' + userText;
+      chat.appendChild(uDiv);
+      scrollToBottom();
+      msgInput.value = '';
+
+      // 顯示思考動畫
+      const thinkingDiv = document.createElement('div');
+      thinkingDiv.className = 'msg bot thinking';
+      thinkingDiv.innerHTML = '<div class="spinner"></div>我思故我在...正在思考…';
+      chat.appendChild(thinkingDiv);
+      scrollToBottom();
+
+      try {
+        // 假設 fetch 向你的後端 API
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userText })
+        });
+        const data = await res.json();
+        const botText = data.reply;
+
+        // 移除思考動畫
+        thinkingDiv.remove();
+
+        // 顯示機器人回應，並格式化
+        const bDiv = document.createElement('div');
+        bDiv.className = 'msg bot';
+        bDiv.innerHTML = '🥸 酵小編： ' + formatBotText(botText);
+        chat.appendChild(bDiv);
+        scrollToBottom();
+
+      } catch (err) {
+        thinkingDiv.textContent = '🥸 酵小編：有點忙碌，快馬加鞭處理中，請稍後再問我一次。';
+        console.error(err);
+        scrollToBottom();
+      }
+    });
+
+    // 支援按 Enter+Ctrl / Cmd+Enter 送出
+    msgInput.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' && e.ctrlKey) || (e.key === 'Enter' && e.metaKey)) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
