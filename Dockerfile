@@ -20,6 +20,10 @@ RUN pip install --upgrade pip setuptools wheel \
 # 再複製所有程式碼
 COPY . .
 
-# 對外暴露 8000，啟動 uvicorn
+# 对外暴露（这个数值只是文档提示用，container 里还是要监听 $PORT）
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# 用 shell form 才会做 env expansion
+CMD uvicorn main:app \
+    --host 0.0.0.0 \
+    --port ${PORT:-8000}
