@@ -105,6 +105,12 @@ async def line_callback(request: Request):
     
     return 'OK'
 
+# Alias /webhook → /callback
+@app.post("/webhook")
+async def line_webhook(request: Request):
+    return await line_callback(request)
+
+    
 @line_handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
     """處理 LINE 訊息事件"""
