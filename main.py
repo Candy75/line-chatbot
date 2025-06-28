@@ -296,17 +296,14 @@ async def chat_with_bot(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"處理訊息時發生錯誤: {str(e)}")
 
+import os
+import uvicorn
+
 if __name__ == "__main__":
     print("🤖 LINE 智能聊天機器人啟動中...")
     print(f"📋 可用角色: {list(CHATBOT_ROLES.keys())}")
     print(f"🎭 預設角色: {DEFAULT_ROLE}")
     print("=" * 50)
-
-    import os
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))   # 從環境變數讀 PORT，預設回退到 8000
-    uvicorn.run(
-        "main:app", 
-        host="0.0.0.0", 
-        port=port, 
-    )
+   
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
