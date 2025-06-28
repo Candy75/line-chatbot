@@ -1,11 +1,23 @@
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
+import os
+
+# 先載入環境變數
+from dotenv import load_dotenv
+load_dotenv()
+# 只在 TEST_MODE 開著的時候才清掉 proxy
+if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
+    os.environ.pop("HTTP_PROXY", None)
+    os.environ.pop("HTTPS_PROXY", None)
+    os.environ.pop("http_proxy", None)
+    os.environ.pop("https_proxy", None)
+
 import openai
 import uvicorn
-import os
+
 import traceback
 from typing import Dict, List, Optional
-from dotenv import load_dotenv
+
 
 # LINE Bot SDK
 from linebot.v3 import WebhookHandler
@@ -18,14 +30,6 @@ from linebot.v3.webhooks import (
     MessageEvent, TextMessageContent
 )
 
-# 載入環境變數
-load_dotenv()
-# 只在 TEST_MODE 開著的時候才清掉 proxy
-if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
-    os.environ.pop("HTTP_PROXY", None)
-    os.environ.pop("HTTPS_PROXY", None)
-    os.environ.pop("http_proxy", None)
-    os.environ.pop("https_proxy", None)
 
 # 建立 FastAPI 應用程式
 app = FastAPI(title="LINE 智能聊天機器人", description="支援角色設定和預設 Prompt 的 LINE Bot")
