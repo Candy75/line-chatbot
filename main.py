@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import openai
 import uvicorn
 import os
+import traceback
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
@@ -212,33 +213,47 @@ def generate_chatbot_response(user_id: str, message: str) -> str:
             {"role": "system", "content": role_config["system_prompt"]}
         ]
         # 發送歡迎訊息
-        welcome_msg = f"歡迎使用智能聊天機器人！\n\n目前角色：{DEFAULT_ROLE}\n個性：{role_config['personality']}\n\n💡 使用指令：\n• /角色 角色名稱 - 切換角色\n• /重置 - 清除對話歷史\n\n現在開始對話吧！"
+        welcome_msg = (
+            f"歡迎使用智能聊天機器人！\n\n"
+            f"目前角色：{DEFAULT_ROLE}\n"
+            f"個性：{role_config['personality']}\n\n"
+            "💡 使用指令：\n"
+            "• /角色 角色名稱 - 切換角色\n"
+            "• /重置 - 清除對話歷史\n\n"
+            "現在開始對話吧！"
+        )
         return welcome_msg
-    
+
     # 添加用戶訊息到歷史
     conversation_history[user_id].append({
-        "role": "user", 
+        "role": "user",
         "content": message
     })
-    
-    # 呼叫 OpenAI API
-    response = openai.chat.completions.create(
-        model=DEFAULT_MODEL,
-        messages=conversation_history[user_id],
-        max_tokens=MAX_TOKENS,
-        temperature=TEMPERATURE
-    )
-    
-    bot_reply = response.choices[0].message.content
-    
+
+    # 呼叫 OpenAI API，並捕捉所有例外以便排錯
+    try:
+        response = openai.chat.completions.create(
+            model=DEFAULT_MODEL,
+            messages=conversation_history[user_id],
+            max_tokens=MAX_TOKENS,
+            temperature=TEMPERATURE
+        )
+        bot_reply = response.choices[0].message.content
+    except Exception as e:
+        # 把完整錯誤堆疊印到 stdout（Railway 的 Logs → Observability 裡可見）
+        traceback.print_exc()
+        # 將錯誤內容短訊回傳給使用者（測試用，可改回原本錯誤訊息）
+        return f"⚠️ Internal Error: {str(e)}"
+
     # 將回應添加到歷史
     conversation_history[user_id].append({
-        "role": "assistant", 
+        "role": "assistant",
         "content": bot_reply
     })
-    
+
     return bot_reply
 
+    
 # === 原有的 API 端點（保留供測試使用）===
 class ChatRequest(BaseModel):
     message: str
