@@ -1,25 +1,25 @@
+import os
+from dotenv import load_dotenv
+
+# 1. 先載入 .env／Railway 上的環境變數
+load_dotenv()
+
+# 2. 如果 TEST_MODE=true，就把所有 proxy 相關的 env key 都 pop 掉
+if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
+    for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+        os.environ.pop(k, None)
+
+# 3. 現在才 import OpenAI SDK，這樣它就不會再撈到 proxies
+import openai
+
+# 4. 接著再載入其他你需要的套件
+import uvicorn
+import traceback
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
-import os
-
-# 先載入環境變數
-from dotenv import load_dotenv
-load_dotenv()
-# 只在 TEST_MODE 開著的時候才清掉 proxy
-if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
-    os.environ.pop("HTTP_PROXY", None)
-    os.environ.pop("HTTPS_PROXY", None)
-    os.environ.pop("http_proxy", None)
-    os.environ.pop("https_proxy", None)
-
-import openai
-import uvicorn
-
-import traceback
 from typing import Dict, List, Optional
 
-
-# LINE Bot SDK
+# 5. 最後才載入 LINE Bot SDK
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import (
@@ -30,8 +30,7 @@ from linebot.v3.webhooks import (
     MessageEvent, TextMessageContent
 )
 
-
-# 建立 FastAPI 應用程式
+# 6. 建立 FastAPI 應用程式
 app = FastAPI(title="LINE 智能聊天機器人", description="支援角色設定和預設 Prompt 的 LINE Bot")
 
 # OpenAI 客戶端設定
