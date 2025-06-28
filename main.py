@@ -13,7 +13,6 @@ if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
 import openai
 
 # 4. 接著再載入其他你需要的套件
-import uvicorn
 import traceback
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
@@ -304,10 +303,10 @@ if __name__ == "__main__":
     print("=" * 50)
 
     import os
+    import uvicorn
     port = int(os.environ.get("PORT", 8000))   # 從環境變數讀 PORT，預設回退到 8000
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
         port=port, 
-        reload=True
     )
