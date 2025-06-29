@@ -91,7 +91,7 @@ CHATBOT_ROLES = {
 
 # 預設設定
 DEFAULT_ROLE = "客服代表"
-DEFAULT_MODEL = "gpt-3.5-turbo"
+DEFAULT_MODEL = "gpt-4o"
 MAX_TOKENS = 1000
 TEMPERATURE = 0.7
 
