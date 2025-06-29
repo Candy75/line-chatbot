@@ -14,8 +14,8 @@ WORKDIR /app
 
 # 先只複製 requirements 並安裝
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel \
- && pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements.txt
 
 # 再複製所有程式碼
 COPY . .
