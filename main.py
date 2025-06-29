@@ -4,10 +4,9 @@ from dotenv import load_dotenv
 # 1. 先載入 .env／Railway 上的環境變數
 load_dotenv()
 
-# 2. 如果 TEST_MODE=true，就把所有 proxy 相關的 env key 都 pop 掉
-if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
-    for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
-        os.environ.pop(k, None)
+# 2. 無論任何情況都清除 proxy 相關環境變數
+for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+    os.environ.pop(k, None)
 
 # 3. 現在才 import OpenAI SDK
 import openai
