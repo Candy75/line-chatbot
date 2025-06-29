@@ -23,7 +23,6 @@ COPY . .
 # 对外暴露（这个数值只是文档提示用，container 里还是要监听 $PORT）
 EXPOSE 8000
 
-# 用 shell form 才会做 env expansion
-CMD uvicorn main:app \
-    --host 0.0.0.0 \
-    --port ${PORT:-8000}
+# 社群解答可能的正確CMD
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
+
