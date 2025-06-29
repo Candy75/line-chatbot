@@ -9,16 +9,16 @@ if os.getenv("TEST_MODE", "").lower() in ("1", "true", "yes"):
     for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
         os.environ.pop(k, None)
 
-# 3. 現在才 import OpenAI SDK，這樣它就不會再撈到 proxies
+# 3. 現在才 import OpenAI SDK
 import openai
 
-# 4. 接著再載入其他你需要的套件
+# 4. 其他套件
 import traceback
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 
-# 5. 最後才載入 LINE Bot SDK
+# 5. LINE Bot SDK
 from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import (
@@ -66,7 +66,6 @@ CHATBOT_ROLES = {
 - 如問題超出專業範圍，請引導客戶聯繫相關專業人員""",
         "personality": "友善、耐心、專業"
     },
-    
     "技術顧問": {
         "system_prompt": """你是一位資深技術顧問，專精於產品技術支援。
 
@@ -119,7 +118,6 @@ async def line_callback(request: Request):
 async def line_webhook(request: Request):
     return await line_callback(request)
 
-    
 @line_handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
     """處理 LINE 訊息事件"""
@@ -255,8 +253,7 @@ def generate_chatbot_response(user_id: str, message: str) -> str:
 
     return bot_reply
 
-    
-# === 原有的 API 端點（保留供測試使用）===
+# === API 端點（供測試使用）===
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
@@ -281,6 +278,11 @@ async def welcome():
         }
     }
 
+@app.get("/health")
+async def health():
+    """健康檢查端點"""
+    return {"status": "ok"}
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_bot(request: ChatRequest):
     """一般聊天 API（供測試使用）"""
@@ -296,18 +298,11 @@ async def chat_with_bot(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"處理訊息時發生錯誤: {str(e)}")
 
-import os
-import uvicorn
-
 if __name__ == "__main__":
+    import uvicorn
     print("🤖 LINE 智能聊天機器人啟動中...")
     print(f"📋 可用角色: {list(CHATBOT_ROLES.keys())}")
     print(f"🎭 預設角色: {DEFAULT_ROLE}")
     print("=" * 50)
-   
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info", )
-
-@app.get("/health")
-def health():
-    return {"status":"ok"}
+    uvicorn.run("main:app", host="0.0.0.0", port=port, log_level="info")
