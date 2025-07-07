@@ -22,10 +22,10 @@ from linebot.v3 import WebhookHandler
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import (
     Configuration, ApiClient, MessagingApi,
-    ReplyMessageRequest, TextMessage
+    ReplyMessageRequest, TextMessage, StickerMessage
 )
 from linebot.v3.webhooks import (
-    MessageEvent, TextMessageContent
+    MessageEvent, TextMessageContent, StickerMessageContent
 )
 
 # 6. 建立 FastAPI 應用程式
@@ -147,7 +147,7 @@ def handle_message(event):
             )
     except Exception as e:
         # 錯誤處理
-        error_message = "抱歉，處理您的訊息時發生錯誤，請稍後再試。"
+        error_message = "抱歉 😣 處理您的訊息時發生錯誤，請稍後再試。"
         with ApiClient(line_configuration) as api_client:
             line_bot_api = MessagingApi(api_client)
             line_bot_api.reply_message_with_http_info(
@@ -156,6 +156,18 @@ def handle_message(event):
                     messages=[TextMessage(text=error_message)]
                 )
             )
+
+@line_handler.add(MessageEvent, message=StickerMessageContent)
+def handle_sticker(event):
+    # 可選擇回傳貼圖或文字
+    with ApiClient(line_configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text="收到你的貼圖了～！")]
+            )
+        )
 
 def handle_role_change(event, user_message):
     """處理角色切換"""
@@ -213,7 +225,7 @@ def generate_chatbot_response(user_id: str, message: str) -> str:
         ]
         # 發送歡迎訊息
         welcome_msg = (
-            f"歡迎使用智能聊天機器人！\n\n"
+            f"Hi 👋 你今天過得如何！\n\n"
             f"目前角色：{DEFAULT_ROLE}\n"
             f"個性：{role_config['personality']}\n\n"
             "💡 使用指令：\n"
