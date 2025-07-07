@@ -25,7 +25,7 @@ from linebot.v3.messaging import (
     ReplyMessageRequest, TextMessage, StickerMessage
 )
 from linebot.v3.webhooks import (
-    MessageEvent, TextMessageContent, StickerMessageContent
+    MessageEvent, TextMessageContent, StickerMessageContent, ImageMessageContent, VideoMessageContent
 )
 
 # 6. 建立 FastAPI 應用程式
@@ -165,7 +165,29 @@ def handle_sticker(event):
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text="收到你的貼圖了～！")]
+                messages=[TextMessage(text="收到你的貼圖了！")]
+            )
+        )
+
+@line_handler.add(MessageEvent, message=ImageMessageContent)
+def handle_image(event):
+    with ApiClient(line_configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text="收到你的圖片了！請用文字簡單敘述圖片的內容，能幫助我能更快速的理解您的問題喔")]
+            )
+        )
+
+@line_handler.add(MessageEvent, message=VideoMessageContent)
+def handle_video(event):
+    with ApiClient(line_configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text="收到你的影片了！請用文字簡單敘述影片的內容，能幫助我能更快速的理解您的問題喔")]
             )
         )
 
