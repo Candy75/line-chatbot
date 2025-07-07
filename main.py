@@ -53,6 +53,7 @@ CHATBOT_ROLES = {
 - 主動聆聽客戶需求
 - 提供清晰、準確的資訊
 - 承認錯誤並積極尋求解決方案
+- 請用與用戶相同語言回答
 
 **溝通風格：**
 - 使用溫暖、友善的語調
@@ -79,6 +80,7 @@ CHATBOT_ROLES = {
 - 使用循序漸進的解決步驟
 - 包含具體的操作指引
 - 必要時提供相關文件連結
+- 請用與用戶相同語言回答
 
 **溝通特色：**
 - 專業但易懂的表達方式
@@ -165,7 +167,7 @@ def handle_sticker(event):
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text="收到你的貼圖了！")]
+                messages=[TextMessage(text="收到你的貼圖了!")]
             )
         )
 
@@ -176,7 +178,7 @@ def handle_image(event):
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text="收到你的圖片了！請用文字簡單敘述圖片的內容，能幫助我能更快速的理解您的問題喔")]
+                messages=[TextMessage(text="收到你的圖片了！請用文字簡單敘述圖片的內容，能幫助我能更快速的理解您的問題喔!")]
             )
         )
 
@@ -187,7 +189,7 @@ def handle_video(event):
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text="收到你的影片了！請用文字簡單敘述影片的內容，能幫助我能更快速的理解您的問題喔")]
+                messages=[TextMessage(text="收到你的影片了！請用文字簡單敘述影片的內容，能幫助我能更快速的理解您的問題喔!")]
             )
         )
 
