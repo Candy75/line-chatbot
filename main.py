@@ -27,8 +27,15 @@ from linebot.v3.messaging import (
 from linebot.v3.webhooks import (
     MessageEvent, TextMessageContent, StickerMessageContent, ImageMessageContent, VideoMessageContent
 )
+# 6. 加入壓縮圖片模組
+from PIL import Image
 
-# 6. 建立 FastAPI 應用程式
+def compress_and_resize_image(input_path, output_path, max_size=512, quality=80):
+    img = Image.open(input_path)
+    img.thumbnail((max_size, max_size))
+    img.save(output_path, "JPEG", quality=quality, optimize=True)
+
+# 7. 建立 FastAPI 應用程式
 app = FastAPI(title="LINE 智能聊天機器人", description="支援角色設定和預設 Prompt 的 LINE Bot")
 
 # OpenAI 客戶端設定
@@ -172,13 +179,39 @@ def handle_sticker(event):
         )
 
 @line_handler.add(MessageEvent, message=ImageMessageContent)
-def handle_image(event):
+async def handle_image(event):
+    # 1. 先用 LINE SDK 下載原圖
+    with ApiClient(line_configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        message_content = await line_bot_api.get_message_content(event.message.id)
+    input_path = f"/tmp/{event.message.id}.jpg"
+    with open(input_path, "wb") as f:
+        for chunk in message_content.iter_raw():
+            f.write(chunk)
+
+    # 2. 呼叫你剛才定義的函式，輸出到另一個暫存檔
+    output_path = f"/tmp/{event.message.id}_compressed.jpg"
+    compress_and_resize_image(input_path, output_path)
+
+    # 3. 用壓縮過的檔案呼叫 OpenAI
+    with open(output_path, "rb") as img_f:
+        response = openai.chat.completions.create(
+            model=DEFAULT_MODEL,
+            messages=[
+                {"role":"system", "content":"請幫我分析這張圖："},
+                {"role":"user", "content":{"image": img_f}}
+            ],
+            # … 其他參數 …
+        )
+    bot_reply = response.choices[0].message.content
+
+    # 4. 回傳給使用者
     with ApiClient(line_configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text="收到你的圖片了！請用文字簡單敘述圖片的內容，能幫助我能更快速的理解您的問題喔!")]
+                messages=[TextMessage(text=bot_reply)]
             )
         )
 
