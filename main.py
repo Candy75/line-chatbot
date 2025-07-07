@@ -27,15 +27,9 @@ from linebot.v3.messaging import (
 from linebot.v3.webhooks import (
     MessageEvent, TextMessageContent, StickerMessageContent, ImageMessageContent, VideoMessageContent
 )
-# 6. 加入壓縮圖片模組
-from PIL import Image
 
-def compress_and_resize_image(input_path, output_path, max_size=512, quality=80):
-    img = Image.open(input_path)
-    img.thumbnail((max_size, max_size))
-    img.save(output_path, "JPEG", quality=quality, optimize=True)
 
-# 7. 建立 FastAPI 應用程式
+# 6. 建立 FastAPI 應用程式
 app = FastAPI(title="LINE 智能聊天機器人", description="支援角色設定和預設 Prompt 的 LINE Bot")
 
 # OpenAI 客戶端設定
@@ -180,33 +174,14 @@ def handle_sticker(event):
 
 @line_handler.add(MessageEvent, message=ImageMessageContent)
 def handle_image(event):
-    # 同步下載原圖
-    message_content = line_bot_api.get_message_content(event.message.id)
-    input_path = f"/tmp/{event.message.id}.jpg"
-    with open(input_path, "wb") as f:
-        for chunk in message_content.iter_raw():
-            f.write(chunk)
-
-    # 壓縮縮圖
-    output_path = f"/tmp/{event.message.id}_compressed.jpg"
-    compress_and_resize_image(input_path, output_path)
-
-    # 同步呼叫 OpenAI（非 openai.aio）
-    with open(output_path, "rb") as img_f:
-        resp = openai.ChatCompletion.create(
-            model=DEFAULT_MODEL,
-            messages=[
-                {"role":"system", "content":"請幫我分析這張圖："},
-                {"role":"user", "content":{"image": img_f}}
-            ],
+    with ApiClient(line_configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text="收到你的圖片囉！請用文字簡單敘述影片的內容，能幫助我能更快速的理解您的問題喔!")]
+            )
         )
-    reply = resp.choices[0].message.content
-
-    # 回傳給使用者
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply)
-    )
 
 @line_handler.add(MessageEvent, message=VideoMessageContent)
 def handle_video(event):
